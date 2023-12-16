@@ -48,11 +48,13 @@ namespace Web_Proxy
             {
                 return;                
             }
+
             var dict = setting.Get();
             if (dict == null)
             {
                 return;
             }
+
             this.tbText.Text = JsonConvert.SerializeObject(dict);
         }
     }

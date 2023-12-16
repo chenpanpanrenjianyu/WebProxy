@@ -42,13 +42,17 @@ namespace Web_Proxy.Api
             }
             var plugins = JsonConvert.DeserializeObject<List<PluginFileView>>(res.Data.ToString());
 
-            //下载插件文件
+            //客户端插件存放路径
             string dir = Environment.CurrentDirectory + "\\" + Guid.NewGuid().ToString("N");
+
+            //从服务器下载插件到客户端是否成功
             var flag = true;
+
+            //存放已下载插件的客户端配置文件
             var list = new List<PluginConfig>();
             foreach (var item in plugins)
             {
-                //根据插件文件表中的下载地址  从运维平台读取插件文件 
+                //从服务器读取插件
                 var _url = baseUrl + "/api/plugin/DownloadFile";
                 var _res = JsonConvert.DeserializeObject<ResponseResult2>(new HttpHelper().Get(_url + "?file_id=" + item.file_id));
                 if (!_res.IsSuccess())
@@ -64,11 +68,12 @@ namespace Web_Proxy.Api
                     
                     return new JsonResult(result);
                 }
+
+                //从服务器拿到插件
                 var file = JsonConvert.DeserializeObject<FileView>(_res.Data.ToString());
 
-                //dir 客户端存放下载的插件文件的路径；
-
-                if (!DownloadFile(file, dir)) //下载插件文件到客户端失败
+                //将服务器拿到的插件下载到本地磁盘
+                if (!DownloadFile(file, dir))
                 {
                     flag = false;
                 }
@@ -95,7 +100,7 @@ namespace Web_Proxy.Api
                 }
             }
 
-
+            //全部插件下载成功
             if (flag)
             {
                 var update_plugin_path = Environment.CurrentDirectory + @"\update_plugin.wp";
@@ -106,10 +111,10 @@ namespace Web_Proxy.Api
                     list.AddRange(update_plugin);
                 }
 
-                //保存配置
+                //保存 【插件更新列】表成功
                 if (new PluginManager("update_plugin.wp").Config.Write(list))
                 {
-                    //从插件配置表中获取插件的默认配置
+                    //生成默认配置
                     var setUrl = baseUrl + "/api/pluginSetting/GetDefSetting";
                     var _res = JsonConvert.DeserializeObject<ResponseResult2>(new HttpHelper().Get(setUrl + "?pluginId=" + pluginId));
        
@@ -172,7 +177,7 @@ namespace Web_Proxy.Api
             }
             else
             {
-                result.Message="此插件未在插件列表里";
+                result.Message="暂无插件配置";
             }
             return new JsonResult(result);
         }

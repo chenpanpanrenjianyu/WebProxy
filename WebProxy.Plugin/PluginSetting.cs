@@ -13,7 +13,8 @@ namespace WebProxy.Plugin
         private string path;
 
         public PluginSetting():this(Environment.CurrentDirectory)
-        {            
+        {
+           
         }
         public PluginSetting(string path)
         {

@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 using Proxy.Common;
 using Web_Proxy.Models;
+using WebProxy.Plugin;
 
 namespace Web_Proxy.Service
 {
@@ -53,10 +55,22 @@ namespace Web_Proxy.Service
             return GetResult(response);
         }
 
-        public ResponseResult2 ModifyClientIp(ClientRegisterModel model)
+        public ResponseResult2 GetClient(string token)
         {
-            var response = new HttpHelper().Post($@"{this.BaseUrl}/api/client/ModifyClientIPs"
-                , JsonConvert.SerializeObject(model), (request) =>
+            var response = new HttpHelper().Get($@"{this.BaseUrl}/api/client/GetClient?token={token}");
+            return GetResult(response);
+        }
+
+        //客户端插件注册检测
+        public ResponseResult2 ModifyPluginsRegister(string token,List<string> plugin_id)
+        {
+            var param = new
+            {
+                token,
+                plugin_id
+            };
+            var response = new HttpHelper().Post($@"{this.BaseUrl}/api/client/ModifyPluginsRegister"
+                , JsonConvert.SerializeObject(param), (request) =>
                 {
                     request.ContentType = "application/json";
                 });
