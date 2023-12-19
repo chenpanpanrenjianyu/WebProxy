@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.HttpProxy;
 using System.IO;
+using System.Windows.Forms;
 using Web_Proxy.Models;
 using WebProxy.Plugin;
 
@@ -262,7 +263,9 @@ namespace Web_Proxy.Api
         public ActionResult Uninstall(string pluginId)
         {
             var result = new ResponseResult2();
+
             var plugins = new PluginManager().Config.Read();
+
             if(plugins != null)
             {
                 var config = plugins.Find(t => t.Plugin.ID == pluginId);
@@ -271,29 +274,78 @@ namespace Web_Proxy.Api
                     result.Message = "客户端未找到插件";
                     return new JsonResult(result);
                 }
+
+                //1,移除插件文件夹
+                try
+                {
+                    var delete_file = config.Path.Substring(0, config.Path.LastIndexOf("\\"));
+                    Directory.Delete(delete_file, true);
+                }
+                catch(Exception e)
+                {
+                    Logger.WriteError($"移除插件文件夹失败:{e.Message}");
+                    result.Message = "移除插件文件夹失败";
+                    return new JsonResult(result);
+                }
+                
+                //将插件从插件列表文件中移除
                 plugins.Remove(config);
             }
+
+            //2，更新插件列表文件
             if (new PluginManager().Config.Write(plugins))
             {
-                //读取配置文件
+                //读取配置文件 获取client的token
                 var _config = new SettingManager().Config.Read();
                 try
                 {
+                    //3，更新数据表
                     string url = _config.BaseApi + "/api/client/DeleteClientPlugin";
                     var res = JsonConvert.DeserializeObject<ResponseResult2>(new HttpHelper().Get(url + "?plugin_id=" + pluginId + "&client_token=" + _config.Token));
-                    result.Sucess("插件卸载成功");
-                    //Application.Restart();
+                    if(res.IsSuccess())
+                    {
+                        result.Sucess("插件卸载成功");
+
+                        //4，更新客户端
+                        RestartApplication();
+                    }
+                    else
+                    {
+                        result.Message = "更新数据表失败";
+                        Logger.WriteError($"更新数据表失败");
+                    } 
                 }
-                catch (Exception exc)
+                catch (Exception e)
                 {
                     result.Message = "插件卸载失败";
+                    Logger.WriteError($"插件卸载失败:{e.Message}"); 
                 }
             }
             else
             {
-                result.Message = "插件卸载失败";
+                result.Message = "更新插件列表失败";
+                Logger.WriteError($"更新插件列表失败");
             }
+
             return new JsonResult(result);
+        }
+
+        /// <summary>
+        /// 更新客户端
+        /// </summary>
+        private void RestartApplication()
+        {
+            // 获取当前进程  
+            Process currentProcess = Process.GetCurrentProcess();
+
+            // 关闭应用程序进程  
+            currentProcess.Close();
+
+            // 等待一段时间以确保进程已经完全关闭  
+            System.Threading.Thread.Sleep(2000);
+
+            // 重新启动应用程序  
+            Process.Start(Application.ExecutablePath);
         }
     }
 }

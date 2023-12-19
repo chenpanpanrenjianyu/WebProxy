@@ -49,6 +49,8 @@ namespace Web_Proxy
                     config_ip = _config.Ip.Split(',');
                 }
 
+                Logger.WriteTrace("客户端正在加入防火墙入栈规则");
+
                 //不同计算机拷贝(或本机重装系统且更换ip)
                 if (commonElements(config_ip, ApplicationUnit.Client.IP))
                 {
@@ -60,6 +62,7 @@ namespace Web_Proxy
             }
             else
             {
+                Logger.WriteTrace("客户端已加入防火墙入栈规则");
                 var res_client = new ClientService().GetClient(ApplicationUnit.Client.Token);
                 if (res_client.IsSuccess())
                 {
