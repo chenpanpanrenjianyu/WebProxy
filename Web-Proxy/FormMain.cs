@@ -37,10 +37,22 @@ namespace Web_Proxy
             ApplicationUnit.IsCheckPlugins = _config.IsCheckPlugins;
 
             //检测客户端
-            if (FireWallHelper.GetRule("Web-Proxy", "TCP") == null)
-            {
+           // if (FireWallHelper.GetRule("Web-Proxy", "TCP") == null)
+            //{
                 //加入防火墙入栈规则
-                FireWallHelper.AddRule("Web-Proxy", ApplicationUnit.Client.Port, "TCP");
+               // FireWallHelper.AddRule("Web-Proxy", ApplicationUnit.Client.Port, "TCP");
+
+            //检测客户端是否注册
+            if (RegistryUtility.ExistConfig())
+            {
+                //保存本地端口配置
+                RegistryUtility.RegistryPort(ApplicationUnit.Client.Port);
+
+               // if (_config?.Ip != ApplicationUnit.Client.IP)
+                //{
+                    //不同计算机拷贝
+                  //  ApplicationUnit.Client.Token = null;
+                    //客户端插件是否需要自动注册
 
                 //本地配置里的ip
                 string[] config_ip = { };
@@ -92,7 +104,7 @@ namespace Web_Proxy
                 _config.token = result.Data.ToString();
                 ApplicationUnit.Client.Token = result.Data.ToString();
                 _config.BaseApi = new ClientService().Config;
-                _config.LocalPort = ApplicationUnit.Client.Port;
+                _config.LocalPort = ApplicationUnit.Client.Port;               
                 _config.Version = ApplicationUnit.Client.Version;
                 _config.VersionNo = ApplicationUnit.Client.VersionNo == null ? 0 : ApplicationUnit.Client.VersionNo.Value;
                 _config.LocalVersionNo = ApplicationUnit.Client.VersionNo == null ? 0 : ApplicationUnit.Client.VersionNo.Value;
